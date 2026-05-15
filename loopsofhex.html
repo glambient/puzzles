@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js"></script> 
+<head>
+    <meta charset="utf-8" />
+    <title>LOZ redux</title>
+    <link rel="stylesheet" href="default.css" />
+</head>
+
+<body>
+    <div>
+        <canvas id="playwindow" width="550" height="500"></canvas>
+    </div>
+    
+    <div>
+        <table style="table-layout: fixed; text-align: center">
+            <tr>
+                <td width="120px"><button id="previousLevel">Previous Level</button></td>
+                <td width="150px">Current Level: <span id="currentLevelText"></span></td>
+                <td width="150px"><span id="levelCompleteMessage"></span></td>
+                <td width="80px"><button id="nextLevel">Next Level</button></td>
+            </tr>
+        </table>
+    </div>
+    <script src="loopsofhex.js"></script>
+</body>

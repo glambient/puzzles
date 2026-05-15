@@ -36,12 +36,18 @@ class Edge {
 }
 
 
+
+
+
 // initialize game-wide values
 const currentLevelText = document.getElementById("currentLevelText")
 const levelCompleteMessage = document.getElementById("levelCompleteMessage");
 var currentLevel = 1;
 currentLevelText.textContent=currentLevel;
-var currentLevelMax = 1;
+
+// currentLevelMax is stored in localStorage
+// if the user has played the game before, get currentLevelMax
+var currentLevelMax = parseInt(localStorage.getItem("maxLevel")) || 1;
 
 // create level inc/dec buttons and button rules
 const previousLevelButton = document.getElementById("previousLevel");
@@ -103,6 +109,79 @@ function thisLevel() {
     }
     // console.log(`Link Frequency: ${linkFrequency}`);
     
+    // click handler function
+    function canvasClicked(event) {
+        // only enable canvas click events if the level is not complete
+        if (levelComplete == false) {
+            // display number of incomplete links
+
+            // retrieve Hexagon that was clicked
+            var clickedCol = event.pageX / colWidth;
+            var clickedRow = event.pageY / rowHeight;
+
+            // console debugging
+            // console.log(`Click Location: ${clickedCol},${clickedRow}`)
+
+            const candidateHexagons = [-2, -1, 0, 1, 2].flatMap(dc =>
+                [-1, 0, 1].map(dr => ({
+                    col: Math.round(clickedCol + dc),
+                    row: Math.round(clickedRow + dr)
+                }))
+            );
+
+            // set comparison values
+            var nearestHexagon = null;
+            var nearestDistance = Infinity;
+
+            // check candidates
+            for (const {col, row} of candidateHexagons) {
+                const thisCandidate = hexagonMap.get(`${col},${row}`);
+
+                if (!thisCandidate) continue;
+
+                // calculate the distance to
+                const thisDistance = Math.hypot(
+                    (thisCandidate.col * colWidth) - event.offsetX,
+                    (thisCandidate.row * rowHeight) - event.offsetY
+                );
+
+                // console.log(`This hexagon: ${thisCandidate.col},${thisCandidate.row}`);
+                // console.log(`This distance: ${thisDistance}`);
+
+                // update best candidate by nearest distance
+                // the center of a regular hexagon is closer to its edge
+                // than the center of any tessellating hexagon
+                if (thisDistance < nearestDistance) {
+                    nearestDistance = thisDistance;
+                    nearestHexagon = thisCandidate;
+                }
+            }
+            
+            // set bool for a completed puzzle
+            levelComplete = false;
+            
+            // rotate this shape
+            if (nearestHexagon) {
+                nearestHexagon.rotate();
+            }
+
+            // clear and redraw canvas
+            redraw();
+
+            // if levelComplete is still true, no mismatched edges were detected. game ends
+            if (levelComplete) {
+                // show message
+                levelCompleteMessage.textContent="Level complete!";
+                // increase max level if applicable
+                if (currentLevel == currentLevelMax) {
+                    currentLevelMax += 1;
+                    localStorage.setItem("maxLevel", currentLevelMax);
+                }
+                levelButtonsEnableCheck();
+            }
+            // if false, click events are re-enabled
+        }   
+    }
 
     // create an array of valid coords for hexagons
     const hexCoords = [];
@@ -214,6 +293,12 @@ function thisLevel() {
     // set up canvas
     const canvas = document.getElementById("playwindow");
     const ctx = canvas.getContext("2d");
+
+    // needed to avoid buildup of click handlers
+    if (canvas._clickHandler) {
+        canvas.removeEventListener('click', canvas._clickHandler);
+    }
+    canvas._clickHandler = canvasClicked;
     canvas.addEventListener('click', canvasClicked);
 
     // get unit sizes
@@ -569,75 +654,5 @@ function thisLevel() {
 
     // draw upon load
     redraw();
-
-    function canvasClicked(event) {
-        // only enable canvas click events if the level is not complete
-        if (!levelComplete) {
-            // display number of incomplete links
-
-            // retrieve Hexagon that was clicked
-            var clickedCol = event.pageX / colWidth;
-            var clickedRow = event.pageY / rowHeight;
-
-            // console debugging
-            // console.log(`Click Location: ${clickedCol},${clickedRow}`)
-
-            const candidateHexagons = [-2, -1, 0, 1, 2].flatMap(dc =>
-                [-1, 0, 1].map(dr => ({
-                    col: Math.round(clickedCol + dc),
-                    row: Math.round(clickedRow + dr)
-                }))
-            );
-
-            // set comparison values
-            var nearestHexagon = null;
-            var nearestDistance = Infinity;
-
-            // check candidates
-            for (const {col, row} of candidateHexagons) {
-                const thisCandidate = hexagonMap.get(`${col},${row}`);
-
-                if (!thisCandidate) continue;
-
-                // calculate the distance to
-                const thisDistance = Math.hypot(
-                    (thisCandidate.col * colWidth) - event.offsetX,
-                    (thisCandidate.row * rowHeight) - event.offsetY
-                );
-
-                // console.log(`This hexagon: ${thisCandidate.col},${thisCandidate.row}`);
-                // console.log(`This distance: ${thisDistance}`);
-
-                // update best candidate by nearest distance
-                // the center of a regular hexagon is closer to its edge
-                // than the center of any tessellating hexagon
-                if (thisDistance < nearestDistance) {
-                    nearestDistance = thisDistance;
-                    nearestHexagon = thisCandidate;
-                }
-            }
-            
-            // set bool for a completed puzzle
-            levelComplete = false;
-            
-            // rotate this shape
-            if (nearestHexagon) {
-                nearestHexagon.rotate();
-            }
-
-            // clear and redraw canvas
-            redraw();
-
-            // if levelComplete is still true, no mismatched edges were detected. game ends
-            if (levelComplete) {
-                // show message
-                levelCompleteMessage.textContent="Level complete!";
-                currentLevelMax += 1;
-                levelButtonsEnableCheck();
-            }
-            // if false, click events are re-enabled
-        }   
-    }
 }
-
 thisLevel();

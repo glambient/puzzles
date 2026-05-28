@@ -103,9 +103,9 @@ function thisLevel() {
 
     // linkFrequency determines likelihood of an edge being a link.
     // This value must be > 1.0 for anything to appear.
-    var linkFrequency = 3.0;
+    var linkFrequency = 2.0;
     if (currentLevel % 2 == 1) {
-        linkFrequency = 2.0;
+        linkFrequency = 3.0;
     }
     // console.log(`Link Frequency: ${linkFrequency}`);
     
